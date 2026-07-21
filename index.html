@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAR Field Toolkit</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0f1117;--bg2:#161920;--bg3:#1d2029;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --text:#e8eaf0;--text2:#8b909e;--text3:#565c6e;
+  --blue:#3d8ef0;--blue-dim:rgba(61,142,240,0.12);--blue-border:rgba(61,142,240,0.35);
+  --green:#3dba7a;--green-dim:rgba(61,186,122,0.1);
+  --red:#e05555;--red-dim:rgba(224,85,85,0.1);
+  --amber:#e8a030;--amber-dim:rgba(232,160,48,0.1);
+  --radius:8px;--radius-lg:12px;
+  --mono:'JetBrains Mono','Fira Mono','Courier New',monospace;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;font-size:14px;line-height:1.5;}
+.app-shell{display:grid;grid-template-columns:220px 1fr;height:100vh;overflow:hidden;}
+.sidebar{background:var(--bg2);border-right:0.5px solid var(--border);display:flex;flex-direction:column;height:100vh;overflow-y:auto;}
+.sidebar-brand{padding:1.25rem 1rem;border-bottom:0.5px solid var(--border);}
+.brand-title{font-size:13px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;}
+.brand-sub{font-size:11px;color:var(--text3);margin-top:3px;}
+.sidebar-nav{padding:0.75rem 0;flex:1;}
+.nav-section-label{font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);padding:0.5rem 1rem 0.25rem;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 1rem;cursor:pointer;color:var(--text2);font-size:13px;transition:all 0.12s;position:relative;border:none;background:none;width:100%;text-align:left;}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,0.04);}
+.nav-item.active{color:var(--blue);background:var(--blue-dim);}
+.nav-item.active::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;background:var(--blue);border-radius:0 2px 2px 0;}
+.nav-icon{width:16px;height:16px;flex-shrink:0;opacity:0.7;}
+.nav-item.active .nav-icon{opacity:1;}
+.sidebar-footer{padding:1rem;border-top:0.5px solid var(--border);font-size:11px;color:var(--text3);}
+.main{overflow-y:auto;height:100vh;}
+.main-header{padding:1.5rem 2rem 1rem;border-bottom:0.5px solid var(--border);}
+.page-title{font-size:18px;font-weight:500;}
+.page-desc{font-size:13px;color:var(--text2);margin-top:4px;}
+.main-content{padding:1.5rem 2rem;}
+.panel{display:none;}.panel.active{display:block;}
+.card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1.25rem;}
+.card-title{font-size:14px;font-weight:500;margin-bottom:4px;}
+.card-desc{font-size:12px;color:var(--text2);margin-bottom:1.25rem;line-height:1.6;}
+.field-grid{display:grid;gap:12px;margin-bottom:12px;}
+.field-grid.cols-2{grid-template-columns:1fr 1fr;}
+.field-grid.cols-3{grid-template-columns:1fr 1fr 1fr;}
+.field-grid.cols-4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field-label{font-size:11px;color:var(--text3);font-weight:500;letter-spacing:0.04em;text-transform:uppercase;}
+input[type=text],input[type=number],select,textarea{background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;width:100%;transition:border-color 0.15s;outline:none;}
+input[type=text]:focus,input[type=number]:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-dim);}
+select{cursor:pointer;}
+textarea{resize:vertical;min-height:90px;font-family:var(--mono);font-size:12px;}
+.drop-zone{border:1.5px dashed var(--border2);border-radius:var(--radius-lg);padding:2rem 1.5rem;text-align:center;cursor:pointer;transition:all 0.15s;margin-bottom:1rem;}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--blue);background:var(--blue-dim);}
+.drop-icon{font-size:24px;margin-bottom:8px;opacity:0.5;}
+.drop-text{font-size:13px;color:var(--text2);}
+.drop-sub{font-size:11px;color:var(--text3);margin-top:4px;}
+.btn{padding:7px 16px;border-radius:var(--radius);border:0.5px solid var(--border2);background:transparent;color:var(--text);font-size:13px;font-family:inherit;cursor:pointer;transition:all 0.12s;font-weight:500;}
+.btn:hover{background:rgba(255,255,255,0.06);}
+.btn:active{transform:scale(0.97);}
+.btn-primary{background:var(--blue);border-color:var(--blue);color:#fff;}
+.btn-primary:hover{background:#2d7ee0;}
+.btn-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:1rem;}
+.toggle-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.toggle-label{font-size:13px;color:var(--text2);}
+.toggle{position:relative;width:36px;height:20px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.track{position:absolute;inset:0;border-radius:20px;background:var(--bg3);border:0.5px solid var(--border2);cursor:pointer;transition:background 0.2s,border-color 0.2s;}
+.toggle input:checked+.track{background:var(--blue);border-color:var(--blue);}
+.thumb{position:absolute;height:14px;width:14px;left:3px;top:2px;border-radius:50%;background:#fff;transition:transform 0.2s;pointer-events:none;}
+.toggle input:checked+.track .thumb{transform:translateX(16px);}
+.status{font-size:12px;padding:8px 12px;border-radius:var(--radius);margin-top:10px;display:none;}
+.status.ok{background:var(--green-dim);color:var(--green);border:0.5px solid rgba(61,186,122,0.25);display:block;}
+.status.err{background:var(--red-dim);color:var(--red);border:0.5px solid rgba(224,85,85,0.25);display:block;}
+.status.info{background:var(--blue-dim);color:var(--blue);border:0.5px solid var(--blue-border);display:block;}
+.status.warn{background:var(--amber-dim);color:var(--amber);border:0.5px solid rgba(232,160,48,0.25);display:block;}
+.output-box{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px;font-family:var(--mono);font-size:11px;color:var(--text2);max-height:220px;overflow-y:auto;white-space:pre;line-height:1.7;margin-top:12px;display:none;}
+.metric-grid{display:grid;gap:10px;margin-bottom:1rem;}
+.metric-grid.cols-2{grid-template-columns:repeat(2,1fr);}
+.metric-grid.cols-3{grid-template-columns:repeat(3,1fr);}
+.metric-grid.cols-4{grid-template-columns:repeat(4,1fr);}
+.metric{background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);padding:10px 14px;}
+.metric-val{font-size:22px;font-weight:500;font-family:var(--mono);}
+.metric-lbl{font-size:11px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:0.05em;}
+.table-wrap{border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;max-height:200px;overflow-y:auto;margin-bottom:1rem;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);padding:7px 10px;background:var(--bg3);border-bottom:0.5px solid var(--border);text-align:left;position:sticky;top:0;}
+td{padding:6px 10px;border-bottom:0.5px solid var(--border);color:var(--text2);font-family:var(--mono);}
+tr:last-child td{border-bottom:none;}
+.divider{height:0.5px;background:var(--border);margin:1.25rem 0;}
+.section-label{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;}
+.badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:10px;background:var(--blue-dim);color:var(--blue);border:0.5px solid var(--blue-border);font-weight:500;margin-left:8px;}
+.welcome-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:1rem;}
+.welcome-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;cursor:pointer;transition:all 0.15s;}
+.welcome-card:hover{border-color:var(--blue);background:var(--blue-dim);}
+.welcome-card-icon{font-size:28px;margin-bottom:10px;}
+.welcome-card-title{font-size:14px;font-weight:500;margin-bottom:4px;}
+.welcome-card-desc{font-size:12px;color:var(--text2);line-height:1.6;}
+.mode-tabs{display:flex;gap:4px;margin-bottom:1rem;}
+.mode-tab{padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border2);background:transparent;cursor:pointer;font-size:13px;color:var(--text2);font-family:inherit;transition:all 0.12s;}
+.mode-tab.active{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:500;}
+@media(max-width:768px){.app-shell{grid-template-columns:1fr;}.sidebar{display:none;}.field-grid.cols-2,.field-grid.cols-3,.field-grid.cols-4{grid-template-columns:1fr;}.metric-grid.cols-3,.metric-grid.cols-4{grid-template-columns:1fr 1fr;}.welcome-grid{grid-template-columns:1fr;}.main-content{padding:1rem;}.main-header{padding:1rem;}}
+</style>
+</head>
+<body>
+<div class="app-shell">
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-title">SAR Toolkit</div>
+    <div class="brand-sub">Field Data Tools</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Tools</div>
+    <button class="nav-item active" onclick="showPanel('home')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 6.5L8 2l6 4.5V14H2V6.5z"/></svg>
+      Home
+    </button>
+    <button class="nav-item" onclick="showPanel('csv-kml')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h10v10H3z"/><path d="M3 6h10M3 9h10M6 3v10"/></svg>
+      CSV to KML
+    </button>
+    <button class="nav-item" onclick="showPanel('gpx-clean')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8c1-3 2-4 4-2s3 4 4 1 2-4 4-2"/></svg>
+      GPX Cleaner
+    </button>
+    <button class="nav-item" onclick="showPanel('kml-reduce')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h5"/><path d="M11 10l3 3-3 3"/></svg>
+      KML Reducer
+    </button>
+    <button class="nav-item" onclick="showPanel('search-pattern')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v12M2 8h12"/><rect x="4" y="4" width="8" height="8"/></svg>
+      Search Patterns
+    </button>
+    <button class="nav-item" onclick="showPanel('search-boxes')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5"/><rect x="9" y="2" width="5" height="5"/><rect x="2" y="9" width="5" height="5"/><rect x="9" y="9" width="5" height="5"/></svg>
+      Search Boxes
+    </button>
+  </nav>
+  <div class="sidebar-footer">SAR Field Toolkit &middot; v1.1<br>All processing is local &mdash; no data leaves your browser.</div>
+</aside>
+<main class="main">
+
+<!-- HOME -->
+<div class="panel active" id="panel-home">
+  <div class="main-header">
+    <div><div class="page-title">SAR Field Toolkit</div><div class="page-desc">Search &amp; Rescue data processing &mdash; local, fast, no data leaves your browser.</div></div>
+  </div>
+  <div class="main-content">
+    <div class="welcome-grid">
+      <div class="welcome-card" onclick="showPanel('csv-kml')">
+        <div class="welcome-card-icon">📍</div>
+        <div class="welcome-card-title">CSV to KML</div>
+        <div class="welcome-card-desc">Import coordinates from CSV (lat/long or UTM) and export as KML with optional track line connecting points in sequence.</div>
+      </div>
+      <div class="welcome-card" onclick="showPanel('gpx-clean')">
+        <div class="welcome-card-icon">🗺️</div>
+        <div class="welcome-card-title">GPX Cleaner</div>
+        <div class="welcome-card-desc">Remove erroneous straight-line segments caused by GPS signal loss from track files.</div>
+      </div>
+      <div class="welcome-card" onclick="showPanel('kml-reduce')">
+        <div class="welcome-card-icon">✂️</div>
+        <div class="welcome-card-title">KML Reducer</div>
+        <div class="welcome-card-desc">Strip thousands of point markers from a KML and replace with a single clean track line. Handles 20,000+ point files.</div>
+      </div>
+      <div class="welcome-card" onclick="showPanel('search-pattern')">
+        <div class="welcome-card-icon">🔍</div>
+        <div class="welcome-card-title">Search Patterns</div>
+        <div class="welcome-card-desc">Generate creeping line or expanding square search patterns as KML.</div>
+      </div>
+      <div class="welcome-card" onclick="showPanel('search-boxes')">
+        <div class="welcome-card-icon">⬜</div>
+        <div class="welcome-card-title">Search Boxes</div>
+        <div class="welcome-card-desc">Generate a grid or radial set of labelled search box polygons as KML for assigning sectors to teams.</div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:1.5rem">
+      <div class="card-title">Privacy &amp; data handling</div>
+      <div class="card-desc" style="margin-bottom:0">All file processing happens entirely in your browser using JavaScript. No data is uploaded to any server. This instance is self-hosted on your own infrastructure.</div>
+    </div>
+  </div>
+</div>
+
+<!-- CSV TO KML -->
+<div class="panel" id="panel-csv-kml">
+  <div class="main-header"><div><div class="page-title">CSV to KML</div><div class="page-desc">Import coordinate CSV and export as KML placemark file with optional track line</div></div></div>
+  <div class="main-content">
+    <div class="card">
+      <div class="card-title">File input</div>
+      <div class="card-desc">Drop a CSV with coordinate columns. Supports decimal-degree lat/long or UTM (zone, easting, northing).</div>
+      <div class="drop-zone" id="csv-drop" onclick="document.getElementById('csv-file').click()">
+        <div class="drop-icon">&#8679;</div>
+        <div class="drop-text">Drop CSV file here or click to browse</div>
+        <div class="drop-sub">Supports .csv and .txt with comma or tab delimiters</div>
+        <input type="file" id="csv-file" accept=".csv,.txt" style="display:none" onchange="handleCSV(this)">
+      </div>
+    </div>
+    <div class="card" id="csv-config" style="display:none">
+      <div class="card-title">Column mapping</div>
+      <div class="card-desc">Map your CSV columns to coordinate fields and choose a label.</div>
+      <div class="field-grid cols-2">
+        <div class="field"><div class="field-label">Coordinate system</div><select id="coord-system" onchange="updateCoordMode()"><option value="latlong">Lat / Long (decimal degrees)</option><option value="utm">UTM (zone + easting + northing)</option></select></div>
+        <div class="field"><div class="field-label">Label column</div><select id="label-col"></select></div>
+      </div>
+      <div id="latlong-fields" class="field-grid cols-2">
+        <div class="field"><div class="field-label">Latitude column</div><select id="lat-col"></select></div>
+        <div class="field"><div class="field-label">Longitude column</div><select id="lng-col"></select></div>
+      </div>
+      <div id="utm-fields" class="field-grid cols-3" style="display:none">
+        <div class="field"><div class="field-label">Zone column</div><select id="utm-zone-col"></select></div>
+        <div class="field"><div class="field-label">Easting column</div><select id="utm-e-col"></select></div>
+        <div class="field"><div class="field-label">Northing column</div><select id="utm-n-col"></select></div>
+      </div>
+      <div class="divider"></div>
+      <div class="section-label">Track line <span id="csv-pt-badge" class="badge">0 points</span></div>
+      <div class="toggle-row">
+        <label class="toggle"><input type="checkbox" id="poly-enable" onchange="togglePolyOpts()"><div class="track"><div class="thumb"></div></div></label>
+        <span class="toggle-label">Connect points with track line</span>
+      </div>
+      <div id="poly-opts" style="display:none">
+        <div class="field-grid cols-2">
+          <div class="field"><div class="field-label">Order by</div><select id="sort-method" onchange="toggleSortCol()"><option value="none">File order (as-is)</option><option value="datetime">Date/time column</option><option value="numeric">Numeric column</option></select></div>
+          <div class="field" id="sort-col-wrap"><div class="field-label">Sort column</div><select id="sort-col"></select></div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="section-label">Preview</div>
+      <div class="table-wrap"><table><thead><tr id="csv-th"></tr></thead><tbody id="csv-tb"></tbody></table></div>
+      <div class="field-grid cols-2">
+        <div class="field"><div class="field-label">KML layer name</div><input type="text" id="kml-name" value="SAR Points"></div>
+        <div class="field"><div class="field-label">Point style</div><select id="kml-icon"><option value="http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png">Circle</option><option value="http://maps.google.com/mapfiles/kml/shapes/triangle.png">Triangle</option><option value="http://maps.google.com/mapfiles/kml/paddle/red-circle.png">Red dot</option><option value="http://maps.google.com/mapfiles/kml/paddle/wht-stars.png">Star</option></select></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="genCSVKML()">Generate &amp; download KML</button>
+        <button class="btn" onclick="newEntryCSV()">New entry</button>
+      </div>
+      <div id="csv-status" class="status"></div>
+      <div id="csv-output" class="output-box"></div>
+    </div>
+  </div>
+</div>
+
+<!-- GPX CLEANER -->
+<div class="panel" id="panel-gpx-clean">
+  <div class="main-header"><div><div class="page-title">GPX Cleaner</div><div class="page-desc">Remove erroneous straight-line segments from GPS track files</div></div></div>
+  <div class="main-content">
+    <div class="card">
+      <div class="card-title">File input</div>
+      <div class="card-desc">Upload a GPX track file. Erroneous segments (GPS signal loss producing long straight lines) are detected by speed or jump-distance thresholds.</div>
+      <div class="drop-zone" id="gpx-drop" onclick="document.getElementById('gpx-file').click()">
+        <div class="drop-icon">&#8679;</div>
+        <div class="drop-text">Drop .gpx file here or click to browse</div>
+        <div class="drop-sub">GPX 1.0 / 1.1 track format</div>
+        <input type="file" id="gpx-file" accept=".gpx,.xml" style="display:none" onchange="handleGPX(this)">
+      </div>
+    </div>
+    <div class="card" id="gpx-config" style="display:none">
+      <div class="section-label">Track summary</div>
+      <div class="metric-grid cols-4">
+        <div class="metric"><div class="metric-val" id="gpx-orig">0</div><div class="metric-lbl">Total points</div></div>
+        <div class="metric"><div class="metric-val" id="gpx-segs">0</div><div class="metric-lbl">Track segments</div></div>
+        <div class="metric"><div class="metric-val" id="gpx-bad">0</div><div class="metric-lbl">Bad segments</div></div>
+        <div class="metric"><div class="metric-val" id="gpx-pct">0%</div><div class="metric-lbl">% flagged</div></div>
+      </div>
+      <div class="divider"></div>
+      <div class="section-label">Detection thresholds</div>
+      <div class="field-grid cols-2">
+        <div class="field"><div class="field-label">Max speed (km/h)</div><input type="number" id="gpx-speed" value="80" min="1" onchange="reanalyse()"></div>
+        <div class="field"><div class="field-label">Max jump distance (metres)</div><input type="number" id="gpx-dist" value="500" min="1" onchange="reanalyse()"></div>
+      </div>
+      <div class="field"><div class="field-label">Action on bad segment</div><select id="gpx-action"><option value="remove">Remove flagged points</option><option value="split">Split track at each gap (separate segments)</option></select></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="cleanGPX()">Clean &amp; download GPX</button>
+        <button class="btn" onclick="reanalyse()">Re-analyse</button>
+        <button class="btn" onclick="newEntryGPX()">New entry</button>
+      </div>
+      <div id="gpx-status" class="status"></div>
+      <div id="gpx-result" style="display:none">
+        <div class="divider"></div>
+        <div class="section-label">Result</div>
+        <div class="metric-grid cols-3">
+          <div class="metric"><div class="metric-val" id="gpx-kept">0</div><div class="metric-lbl">Points kept</div></div>
+          <div class="metric"><div class="metric-val" id="gpx-removed">0</div><div class="metric-lbl">Points removed</div></div>
+          <div class="metric"><div class="metric-val" id="gpx-out-segs">1</div><div class="metric-lbl">Output segments</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- KML REDUCER -->
+<div class="panel" id="panel-kml-reduce">
+  <div class="main-header"><div><div class="page-title">KML Reducer</div><div class="page-desc">Strip point markers from large KMLs and replace with a single track line</div></div></div>
+  <div class="main-content">
+    <div class="card">
+      <div class="card-title">File input</div>
+      <div class="card-desc">Upload a KML file with large numbers of point markers (e.g. search jet tracks). All point placemarks will be removed and replaced with a single LineString track.</div>
+      <div class="drop-zone" id="kmlr-drop" onclick="document.getElementById('kmlr-file').click()">
+        <div class="drop-icon">&#8679;</div>
+        <div class="drop-text">Drop .kml file here or click to browse</div>
+        <div class="drop-sub">Handles files with 10,000&ndash;100,000+ point placemarks</div>
+        <input type="file" id="kmlr-file" accept=".kml,.kmz" style="display:none" onchange="handleKMLR(this)">
+      </div>
+    </div>
+    <div class="card" id="kmlr-config" style="display:none">
+      <div class="section-label">File summary</div>
+      <div class="metric-grid cols-4">
+        <div class="metric"><div class="metric-val" id="kmlr-pt-count">0</div><div class="metric-lbl">Point markers</div></div>
+        <div class="metric"><div class="metric-val" id="kmlr-line-count">0</div><div class="metric-lbl">Existing lines</div></div>
+        <div class="metric"><div class="metric-val" id="kmlr-folder-count">0</div><div class="metric-lbl">Folders</div></div>
+        <div class="metric"><div class="metric-val" id="kmlr-size">&#8212;</div><div class="metric-lbl">File size</div></div>
+      </div>
+      <div class="divider"></div>
+      <div class="section-label">Output options</div>
+      <div class="field-grid cols-2">
+        <div class="field"><div class="field-label">Track source</div><select id="kmlr-mode"><option value="auto">Auto &mdash; use existing lines if present, otherwise build from points</option><option value="rebuild">Always rebuild track from points</option><option value="strip">Strip points only &mdash; keep existing lines</option></select></div>
+        <div class="field"><div class="field-label">Point ordering</div><select id="kmlr-order"><option value="none">Preserve file order (as-is)</option><option value="timestamp">Sort by timestamp (if present)</option></select></div>
+      </div>
+      <div class="divider"></div>
+      <div class="section-label">Simplification</div>
+      <div class="field-grid cols-2">
+        <div class="field"><div class="field-label">Method</div><select id="kmlr-simp-method" onchange="toggleKMLRSimpOptions()"><option value="none">None &mdash; keep all points</option><option value="distance">Distance &mdash; minimum metres between points</option><option value="time">Time &mdash; minimum seconds between points</option></select></div>
+        <div class="field" id="kmlr-simp-val-wrap" style="display:none"><div class="field-label" id="kmlr-simp-val-label">Minimum distance (metres)</div><input type="number" id="kmlr-simp-val" value="50" min="1"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="field-grid cols-2">
+        <div class="field"><div class="field-label">Output layer name</div><input type="text" id="kmlr-name" value="Search Track"></div>
+        <div class="field"><div class="field-label">Track line colour</div><select id="kmlr-colour"><option value="ff0000ff">Red</option><option value="ffff8800">Orange</option><option value="ffffff00">Yellow</option><option value="ff00ff00">Green</option><option value="ffff0000">Blue</option><option value="ffffffff">White</option></select></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="reduceKML()">Reduce &amp; download KML</button>
+        <button class="btn" onclick="newEntryKMLR()">New entry</button>
+      </div>
+      <div id="kmlr-status" class="status"></div>
+      <div id="kmlr-result" style="display:none">
+        <div class="divider"></div>
+        <div class="section-label">Result</div>
+        <div class="metric-grid cols-3">
+          <div class="metric"><div class="metric-val" id="kmlr-out-pts">0</div><div class="metric-lbl">Track points</div></div>
+          <div class="metric"><div class="metric-val" id="kmlr-removed">0</div><div class="metric-lbl">Markers removed</div></div>
+          <div class="metric"><div class="metric-val" id="kmlr-reduction">0%</div><div class="metric-lbl">Size reduction</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SEARCH PATTERNS -->
+<div class="panel" id="panel-search-pattern">
+  <div class="main-header"><div><div class="page-title">Search Patterns</div><div class="page-desc">Generate creeping line or expanding square search patterns from a datum point</div></div></div>
+  <div class="main-content">
+    <div class="card">
+      <div class="card-title">Datum &amp; pattern type</div>
+      <div class="card-desc">Enter the datum in decimal degrees and select a pattern. All distances in metres, bearings in degrees true.</div>
+      <div class="field-grid cols-2">
+        <div class="field"><div class="field-label">Datum latitude</div><input type="number" id="sp-lat" step="0.000001" placeholder="e.g. -31.956250"></div>
+        <div class="field"><div class="field-label">Datum longitude</div><input type="number" id="sp-lng" step="0.000001" placeholder="e.g. 115.862507"></div>
+      </div>
+      <div class="field-grid cols-2">
+        <div class="field"><div class="field-label">Initial bearing (degrees true)</div><input type="number" id="sp-bearing" value="0" min="0" max="359" step="1"></div>
+        <div class="field"><div class="field-label">Pattern type</div><select id="sp-type" onchange="toggleSPOptions()"><option value="creeping">Creeping line (parallel track)</option><option value="square">Expanding square</option></select></div>
+      </div>
+    </div>
+    <div class="card" id="sp-creeping-opts">
+      <div class="card-title">Creeping line parameters</div>
+      <div class="card-desc">Datum is the bottom corner of the first track. Tracks run parallel to the initial bearing, advancing perpendicular by one sweep width each pass.</div>
+      <div class="field-grid cols-3">
+        <div class="field"><div class="field-label">Track length (metres)</div><input type="number" id="sp-cl-length" value="2000" min="1"></div>
+        <div class="field"><div class="field-label">Sweep width (metres)</div><input type="number" id="sp-cl-sweep" value="100" min="1"></div>
+        <div class="field"><div class="field-label">Number of tracks</div><input type="number" id="sp-cl-tracks" value="10" min="2" max="200"></div>
+      </div>
+      <div class="field"><div class="field-label">Pattern expands to</div><select id="sp-cl-side"><option value="right">Right of initial bearing</option><option value="left">Left of initial bearing</option></select></div>
+    </div>
+    <div class="card" id="sp-square-opts" style="display:none">
+      <div class="card-title">Expanding square parameters</div>
+      <div class="card-desc">Datum is the centre. The first leg goes out along the initial bearing. The pattern expands until the outermost side of the square reaches the total radius.</div>
+      <div class="field-grid cols-3">
+        <div class="field"><div class="field-label">Total radius (metres)</div><input type="number" id="sp-sq-radius" value="500" min="1"></div>
+        <div class="field"><div class="field-label">Sweep width (metres)</div><input type="number" id="sp-sq-sweep" value="100" min="1"></div>
+        <div class="field"><div class="field-label">Turn direction</div><select id="sp-sq-turn"><option value="right">Right turns</option><option value="left">Left turns</option></select></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Output</div>
+      <div class="field-grid cols-2">
+        <div class="field"><div class="field-label">KML layer name</div><input type="text" id="sp-name" value="Search Pattern"></div>
+        <div class="field"><div class="field-label">Track line colour</div><select id="sp-colour"><option value="ffff8800">Orange</option><option value="ff0000ff">Red</option><option value="ffffff00">Yellow</option><option value="ff00ff00">Green</option><option value="ffff0000">Blue</option><option value="ffffffff">White</option></select></div>
+      </div>
+      <div class="toggle-row"><label class="toggle"><input type="checkbox" id="sp-datum-marker" checked><div class="track"><div class="thumb"></div></div></label><span class="toggle-label">Include datum marker placemark</span></div>
+      <div class="toggle-row"><label class="toggle"><input type="checkbox" id="sp-waypoints"><div class="track"><div class="thumb"></div></div></label><span class="toggle-label">Include turn waypoints as placemarks</span></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="generatePattern()">Generate &amp; download KML</button>
+        <button class="btn" onclick="previewPattern()">Preview stats</button>
+        <button class="btn" onclick="newEntryPattern()">New entry</button>
+      </div>
+      <div id="sp-status" class="status"></div>
+      <div id="sp-result" style="display:none">
+        <div class="divider"></div>
+        <div class="section-label">Pattern summary</div>
+        <div class="metric-grid cols-4">
+          <div class="metric"><div class="metric-val" id="sp-total-dist">&#8212;</div><div class="metric-lbl">Total distance</div></div>
+          <div class="metric"><div class="metric-val" id="sp-area">&#8212;</div><div class="metric-lbl">Area covered</div></div>
+          <div class="metric"><div class="metric-val" id="sp-legs-out">&#8212;</div><div class="metric-lbl">Legs</div></div>
+          <div class="metric"><div class="metric-val" id="sp-waypts-out">&#8212;</div><div class="metric-lbl">Waypoints</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SEARCH BOXES -->
+<div class="panel" id="panel-search-boxes">
+  <div class="main-header"><div><div class="page-title">Search Boxes</div><div class="page-desc">Generate labelled search box polygons as KML for assigning sectors to teams</div></div></div>
+  <div class="main-content">
+    <div class="card">
+      <div class="card-title">Mode &amp; datum</div>
+      <div class="card-desc">Grid mode starts from the bottom-left corner of the search area. Radial mode starts from a centre datum and builds outward ring by ring.</div>
+      <div class="mode-tabs">
+        <button class="mode-tab active" id="sb-tab-grid" onclick="setSBMode('grid')">Grid</button>
+        <button class="mode-tab" id="sb-tab-radial" onclick="setSBMode('radial')">Radial</button>
+      </div>
+      <div class="field-grid cols-2">
+        <div class="field"><div class="field-label" id="sb-lat-label">Bottom-left latitude</div><input type="number" id="sb-lat" step="0.000001" placeholder="e.g. -31.956250"></div>
+        <div class="field"><div class="field-label">Longitude</div><input type="number" id="sb-lng" step="0.000001" placeholder="e.g. 115.862507"></div>
+      </div>
+      <div class="field-grid cols-2">
+        <div class="field"><div class="field-label">Box size (metres)</div><input type="number" id="sb-size" value="1000" min="1"></div>
+        <div class="field"><div class="field-label">Bearing (degrees true, 0 = north)</div><input type="number" id="sb-bearing" value="0" min="0" max="359" step="1"></div>
+      </div>
+    </div>
+    <div class="card" id="sb-grid-opts">
+      <div class="card-title">Grid parameters</div>
+      <div class="card-desc">Boxes are numbered left-to-right, top-to-bottom. Box 1 is top-left.</div>
+      <div class="field-grid cols-2">
+        <div class="field"><div class="field-label">Columns (left to right)</div><input type="number" id="sb-cols" value="5" min="1" max="50"></div>
+        <div class="field"><div class="field-label">Rows (bottom to top)</div><input type="number" id="sb-rows" value="5" min="1" max="50"></div>
+      </div>
+    </div>
+    <div class="card" id="sb-radial-opts" style="display:none">
+      <div class="card-title">Radial parameters</div>
+      <div class="card-desc">Box 1 is the centre. Ring 1 adds 8 surrounding boxes, ring 2 adds 16 more, and so on. Boxes are numbered clockwise from the top of each ring.</div>
+      <div class="field"><div class="field-label">Number of rings (0 = centre box only)</div><input type="number" id="sb-rings" value="3" min="0" max="20"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Labels &amp; output</div>
+      <div class="field-grid cols-3">
+        <div class="field">
+          <div class="field-label">Label format</div>
+          <select id="sb-label-format">
+            <option value="num">1, 2, 3 &mdash; sequential numbers</option>
+            <option value="dotted">1.1, 1.2 &mdash; group.position</option>
+            <option value="alpha">A, B, C &mdash; sequential alpha</option>
+            <option value="dblalpha">AA, AB, AC &mdash; double alpha</option>
+            <option value="alphanum">A1, A2, B1 &mdash; alpha group + number</option>
+          </select>
+        </div>
+        <div class="field"><div class="field-label">KML layer name</div><input type="text" id="sb-name" value="Search Boxes"></div>
+        <div class="field">
+          <div class="field-label">Box colour</div>
+          <select id="sb-colour">
+            <option value="ff0000ff">Red</option>
+            <option value="ffff8800">Orange</option>
+            <option value="ffffff00">Yellow</option>
+            <option value="ff00ff00">Green</option>
+            <option value="ffff0000">Blue</option>
+            <option value="ffffffff">White</option>
+          </select>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="generateSearchBoxes()">Generate &amp; download KML</button>
+        <button class="btn" onclick="previewSearchBoxes()">Preview stats</button>
+        <button class="btn" onclick="newEntrySearchBoxes()">New entry</button>
+      </div>
+      <div id="sb-status" class="status"></div>
+      <div id="sb-result" style="display:none">
+        <div class="divider"></div>
+        <div class="section-label">Summary</div>
+        <div class="metric-grid cols-3">
+          <div class="metric"><div class="metric-val" id="sb-total-boxes">0</div><div class="metric-lbl">Total boxes</div></div>
+          <div class="metric"><div class="metric-val" id="sb-total-area">&#8212;</div><div class="metric-lbl">Total area</div></div>
+          <div class="metric"><div class="metric-val" id="sb-box-size-out">&#8212;</div><div class="metric-lbl">Box size</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+<script>
+// ── Navigation ────────────────────────────────────────────────────────────────
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(b => {
+    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("'" + id + "'")) b.classList.add('active');
+  });
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function setStatus(id, msg, type) { const el = document.getElementById(id); el.textContent = msg; el.className = 'status ' + type; }
+function clearStatus(id) { const el = document.getElementById(id); el.className = 'status'; el.textContent = ''; }
+function downloadBlob(content, filename, mime) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content], { type: mime })); a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371000, r = Math.PI / 180;
+  const dLat = (lat2 - lat1) * r, dLon = (lon2 - lon1) * r;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function destPoint(lat, lng, bearing, dist) {
+  const R = 6371000, d = dist / R, b = bearing * Math.PI / 180;
+  const lat1 = lat * Math.PI / 180, lng1 = lng * Math.PI / 180;
+  const lat2 = Math.asin(Math.sin(lat1) * Math.cos(d) + Math.cos(lat1) * Math.sin(d) * Math.cos(b));
+  const lng2 = lng1 + Math.atan2(Math.sin(b) * Math.sin(d) * Math.cos(lat1), Math.cos(d) - Math.sin(lat1) * Math.sin(lat2));
+  return { lat: lat2 * 180 / Math.PI, lng: lng2 * 180 / Math.PI };
+}
+
+function normBearing(b) { return ((b % 360) + 360) % 360; }
+function formatDist(m) { return m >= 1000 ? (m / 1000).toFixed(1) + ' km' : Math.round(m) + ' m'; }
+
+// ── Drop zones ────────────────────────────────────────────────────────────────
+['csv-drop', 'gpx-drop'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('drag-over'); });
+  el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+  el.addEventListener('drop', e => {
+    e.preventDefault(); el.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0]; if (!file) return;
+    const r = new FileReader(); r.readAsText(file);
+    if (id === 'csv-drop') r.onload = ev => parseCSVText(ev.target.result);
+    if (id === 'gpx-drop') r.onload = ev => loadGPX(ev.target.result);
+  });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const el = document.getElementById('kmlr-drop');
+  if (!el) return;
+  el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('drag-over'); });
+  el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+  el.addEventListener('drop', e => {
+    e.preventDefault(); el.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0]; if (!file) return;
+    kmlrOrigSize = file.size;
+    const r = new FileReader(); r.onload = ev => loadKMLR(ev.target.result); r.readAsText(file);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TOOL 1: CSV to KML
+// ═══════════════════════════════════════════════════════════════════════════
+let csvData = [], csvHeaders = [];
+
+function handleCSV(input) { const f = input.files[0]; if (!f) return; const r = new FileReader(); r.onload = e => parseCSVText(e.target.result); r.readAsText(f); }
+
+function parseCSVText(text) {
+  const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) { setStatus('csv-status', 'File appears empty or has no data rows.', 'err'); return; }
+  const delim = lines[0].includes('\t') ? '\t' : ',';
+  csvHeaders = lines[0].split(delim).map(h => h.trim().replace(/^"|"$/g, ''));
+  csvData = lines.slice(1).map(line => {
+    const vals = line.split(delim).map(v => v.trim().replace(/^"|"$/g, ''));
+    const row = {}; csvHeaders.forEach((h, i) => row[h] = vals[i] || ''); return row;
+  }).filter(row => Object.values(row).some(v => v));
+  document.getElementById('csv-config').style.display = 'block';
+  document.getElementById('csv-pt-badge').textContent = csvData.length + ' points';
+  const guesses = { 'label-col': 'name', 'lat-col': 'lat', 'lng-col': 'lon', 'sort-col': 'time', 'utm-zone-col': 'zone', 'utm-e-col': 'east', 'utm-n-col': 'north' };
+  Object.entries(guesses).forEach(([id, g]) => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = csvHeaders.map(h => '<option value="' + h + '"' + (h.toLowerCase().includes(g) ? ' selected' : '') + '>' + h + '</option>').join('');
+  });
+  const cols = csvHeaders.slice(0, 6);
+  document.getElementById('csv-th').innerHTML = cols.map(h => '<th>' + h + '</th>').join('');
+  document.getElementById('csv-tb').innerHTML = csvData.slice(0, 8).map(row => '<tr>' + cols.map(h => '<td>' + (row[h] || '') + '</td>').join('') + '</tr>').join('');
+}
+
+function updateCoordMode() { const s = document.getElementById('coord-system').value; document.getElementById('latlong-fields').style.display = s === 'latlong' ? '' : 'none'; document.getElementById('utm-fields').style.display = s === 'utm' ? '' : 'none'; }
+function togglePolyOpts() { document.getElementById('poly-opts').style.display = document.getElementById('poly-enable').checked ? '' : 'none'; }
+function toggleSortCol() { document.getElementById('sort-col-wrap').style.display = document.getElementById('sort-method').value === 'none' ? 'none' : ''; }
+
+function utmToLatLng(zone, easting, northing, isSouth) {
+  const k0=0.9996,a=6378137,e2=0.00669438,x=easting-500000,y=isSouth?northing-10000000:northing,M=y/k0;
+  const mu=M/(a*(1-e2/4-3*e2**2/64-5*e2**3/256)),e1=(1-Math.sqrt(1-e2))/(1+Math.sqrt(1-e2));
+  const fp=mu+(3*e1/2-27*e1**3/32)*Math.sin(2*mu)+(21*e1**2/16-55*e1**4/32)*Math.sin(4*mu)+(151*e1**3/96)*Math.sin(6*mu)+(1097*e1**4/512)*Math.sin(8*mu);
+  const C1=(e2/(1-e2))*Math.cos(fp)**2,T1=Math.tan(fp)**2,R1=a*(1-e2)/Math.pow(1-e2*Math.sin(fp)**2,1.5),N1=a/Math.sqrt(1-e2*Math.sin(fp)**2),D=x/(N1*k0),Q1=N1*Math.tan(fp)/R1;
+  const lat=(fp-Q1*(D**2/2-(5+3*T1+10*C1-4*C1**2-9*(e2/(1-e2)))*D**4/24+(61+90*T1+298*C1+45*T1**2-252*(e2/(1-e2))-3*C1**2)*D**6/720))*(180/Math.PI);
+  const lng=(zone*6-183)+((D-(1+2*T1+C1)*D**3/6+(5-2*C1+28*T1-3*C1**2+8*(e2/(1-e2))+24*T1**2)*D**5/120)/Math.cos(fp))*(180/Math.PI);
+  return { lat, lng };
+}
+
+function getCoord(row) {
+  const sys = document.getElementById('coord-system').value;
+  if (sys === 'latlong') { const lat=parseFloat(row[document.getElementById('lat-col').value]),lng=parseFloat(row[document.getElementById('lng-col').value]); return (isNaN(lat)||isNaN(lng))?null:{lat,lng}; }
+  const zoneStr=row[document.getElementById('utm-zone-col').value]||'50',zone=parseInt(zoneStr)||50,isSouth=!zoneStr.toUpperCase().includes('N'),e=parseFloat(row[document.getElementById('utm-e-col').value]),n=parseFloat(row[document.getElementById('utm-n-col').value]);
+  return (isNaN(e)||isNaN(n))?null:utmToLatLng(zone,e,n,isSouth);
+}
+
+function genCSVKML() {
+  try {
+    let rows = [...csvData];
+    const method = document.getElementById('sort-method').value;
+    if (method === 'datetime') { const col=document.getElementById('sort-col').value; rows.sort((a,b)=>new Date(a[col])-new Date(b[col])); }
+    else if (method === 'numeric') { const col=document.getElementById('sort-col').value; rows.sort((a,b)=>parseFloat(a[col])-parseFloat(b[col])); }
+    const labelCol=document.getElementById('label-col').value,name=document.getElementById('kml-name').value||'SAR Points',icon=document.getElementById('kml-icon').value,withPoly=document.getElementById('poly-enable').checked;
+    const points=rows.map(row=>({coord:getCoord(row),label:row[labelCol]||''})).filter(p=>p.coord);
+    if (!points.length) { setStatus('csv-status','No valid coordinates found.','err'); return; }
+    const NL='\n';
+    let kml='<?xml version="1.0" encoding="UTF-8"?>'+NL+'<kml xmlns="http://www.opengis.net/kml/2.2">'+NL+'<Document>'+NL+'  <name>'+name+'</name>'+NL;
+    kml+='  <Style id="pt"><IconStyle><scale>1.0</scale><Icon><href>'+icon+'</href></Icon></IconStyle></Style>'+NL;
+    kml+='  <Style id="ln"><LineStyle><color>ff3d8ef0</color><width>2</width></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style>'+NL;
+    points.forEach((p,i)=>{ kml+='  <Placemark><name>'+(p.label||'Point '+(i+1))+'</name><styleUrl>#pt</styleUrl><Point><coordinates>'+p.coord.lng.toFixed(7)+','+p.coord.lat.toFixed(7)+',0</coordinates></Point></Placemark>'+NL; });
+    if (withPoly&&points.length>1) { const coordStr=points.map(p=>p.coord.lng.toFixed(7)+','+p.coord.lat.toFixed(7)+',0').join(NL+'          '); kml+='  <Placemark><name>'+name+' track</name><styleUrl>#ln</styleUrl><LineString><coordinates>'+NL+'          '+coordStr+NL+'    </coordinates></LineString></Placemark>'+NL; }
+    kml+='</Document>'+NL+'</kml>';
+    const out=document.getElementById('csv-output'); out.textContent=kml; out.style.display='block';
+    setStatus('csv-status','Generated KML with '+points.length+' placemarks'+(withPoly?' + track line':'')+'.' ,'ok');
+    downloadBlob(kml,(name.replace(/\s+/g,'_'))+'.kml','application/vnd.google-earth.kml+xml');
+  } catch(e) { setStatus('csv-status','Error: '+e.message,'err'); }
+}
+
+function newEntryCSV() { csvData=[]; csvHeaders=[]; document.getElementById('csv-config').style.display='none'; document.getElementById('csv-file').value=''; document.getElementById('csv-output').style.display='none'; clearStatus('csv-status'); }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TOOL 2: GPX Cleaner
+// ═══════════════════════════════════════════════════════════════════════════
+let gpxDoc = null, gpxOrigText = '';
+
+function handleGPX(input) { const f=input.files[0]; if(!f) return; const r=new FileReader(); r.onload=e=>loadGPX(e.target.result); r.readAsText(f); }
+
+function loadGPX(text) {
+  gpxOrigText=text;
+  const parser=new DOMParser(); gpxDoc=parser.parseFromString(text,'text/xml');
+  if (gpxDoc.querySelector('parsererror')) { setStatus('gpx-status','Invalid GPX file.','err'); return; }
+  const pts=gpxDoc.querySelectorAll('trkpt'),segs=gpxDoc.querySelectorAll('trkseg');
+  document.getElementById('gpx-config').style.display='block';
+  document.getElementById('gpx-orig').textContent=pts.length;
+  document.getElementById('gpx-segs').textContent=segs.length;
+  document.getElementById('gpx-result').style.display='none';
+  reanalyse();
+}
+
+function reanalyse() {
+  if (!gpxDoc) return;
+  const maxSpeed=parseFloat(document.getElementById('gpx-speed').value)||80,maxDist=parseFloat(document.getElementById('gpx-dist').value)||500;
+  const pts=[...gpxDoc.querySelectorAll('trkpt')]; let bad=0;
+  for (let i=1;i<pts.length;i++) {
+    const a=pts[i-1],b=pts[i],dist=haversine(+a.getAttribute('lat'),+a.getAttribute('lon'),+b.getAttribute('lat'),+b.getAttribute('lon'));
+    if (dist>maxDist){bad++;continue;}
+    const ta=a.querySelector('time'),tb=b.querySelector('time');
+    if (ta&&tb){const dt=(new Date(tb.textContent)-new Date(ta.textContent))/1000; if(dt>0&&(dist/dt)*3.6>maxSpeed)bad++;}
+  }
+  document.getElementById('gpx-bad').textContent=bad;
+  document.getElementById('gpx-pct').textContent=pts.length>0?Math.round(bad/pts.length*100)+'%':'0%';
+  setStatus('gpx-status',bad>0?bad+' bad segment'+(bad!==1?'s':'')+' detected.':'No erroneous segments detected.',bad>0?'warn':'ok');
+}
+
+function cleanGPX() {
+  if (!gpxDoc) return;
+  const maxSpeed=parseFloat(document.getElementById('gpx-speed').value)||80,maxDist=parseFloat(document.getElementById('gpx-dist').value)||500,action=document.getElementById('gpx-action').value;
+  const parser=new DOMParser(); const workDoc=parser.parseFromString(gpxOrigText,'text/xml');
+  const pts=[...workDoc.querySelectorAll('trkpt')];
+  const keep=[true];
+  for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],dist=haversine(+a.getAttribute('lat'),+a.getAttribute('lon'),+b.getAttribute('lat'),+b.getAttribute('lon'));let bad=dist>maxDist;if(!bad){const ta=a.querySelector('time'),tb=b.querySelector('time');if(ta&&tb){const dt=(new Date(tb.textContent)-new Date(ta.textContent))/1000;if(dt>0&&(dist/dt)*3.6>maxSpeed)bad=true;}}keep.push(!bad);}
+  const removed=keep.filter(k=>!k).length,kept=keep.filter(k=>k).length;let outSegs=1;
+  if(action==='remove'){pts.forEach((p,i)=>{if(!keep[i])p.parentNode.removeChild(p);});outSegs=workDoc.querySelectorAll('trkseg').length;}
+  else{const segsEls=workDoc.querySelectorAll('trkseg');segsEls.forEach(s=>{[...s.querySelectorAll('trkpt')].forEach(p=>s.removeChild(p));});const firstSeg=segsEls[0],trk=firstSeg.parentNode;segsEls.forEach((s,si)=>{if(si>0)trk.removeChild(s);});let curSeg=firstSeg;const ns=workDoc.documentElement.namespaceURI;pts.forEach((p,i)=>{if(!keep[i]){if(curSeg.children.length>0){curSeg=workDoc.createElementNS(ns,'trkseg');trk.appendChild(curSeg);}}else{curSeg.appendChild(p.cloneNode(true));}});outSegs=workDoc.querySelectorAll('trkseg').length;}
+  const output=new XMLSerializer().serializeToString(workDoc);
+  document.getElementById('gpx-kept').textContent=kept;
+  document.getElementById('gpx-removed').textContent=removed;
+  document.getElementById('gpx-out-segs').textContent=outSegs;
+  document.getElementById('gpx-result').style.display='block';
+  setStatus('gpx-status','Done. '+removed+' point'+(removed!==1?'s':'')+' removed, '+kept+' kept. Downloading...','ok');
+  downloadBlob(output,'cleaned_track.gpx','application/gpx+xml');
+}
+
+function newEntryGPX() { gpxDoc=null; gpxOrigText=''; document.getElementById('gpx-config').style.display='none'; document.getElementById('gpx-result').style.display='none'; document.getElementById('gpx-file').value=''; clearStatus('gpx-status'); }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TOOL 3: KML Reducer
+// ═══════════════════════════════════════════════════════════════════════════
+let kmlrDoc = null, kmlrOrigSize = 0;
+
+function handleKMLR(input) { const f=input.files[0]; if(!f) return; kmlrOrigSize=f.size; const r=new FileReader(); r.onload=e=>loadKMLR(e.target.result); r.readAsText(f); }
+
+function loadKMLR(text) {
+  const parser=new DOMParser(); kmlrDoc=parser.parseFromString(text,'text/xml');
+  if(kmlrDoc.querySelector('parsererror')){setStatus('kmlr-status','Invalid KML file.','err');return;}
+  const pts=kmlrDoc.querySelectorAll('Placemark Point'),lines=kmlrDoc.querySelectorAll('Placemark LineString, Placemark MultiGeometry'),folders=kmlrDoc.querySelectorAll('Folder');
+  document.getElementById('kmlr-pt-count').textContent=pts.length.toLocaleString();
+  document.getElementById('kmlr-line-count').textContent=lines.length.toLocaleString();
+  document.getElementById('kmlr-folder-count').textContent=folders.length.toLocaleString();
+  document.getElementById('kmlr-size').textContent=kmlrOrigSize>1048576?(kmlrOrigSize/1048576).toFixed(1)+' MB':Math.round(kmlrOrigSize/1024)+' KB';
+  document.getElementById('kmlr-config').style.display='block';
+  document.getElementById('kmlr-result').style.display='none';
+  document.getElementById('kmlr-mode').value=lines.length>0?'auto':'rebuild';
+  setStatus('kmlr-status',pts.length>0?pts.length.toLocaleString()+' point markers detected'+(lines.length>0?' alongside '+lines.length+' existing line(s).':' — will build track from points.'):'No point markers found.','info');
+}
+
+function toggleKMLRSimpOptions() { const m=document.getElementById('kmlr-simp-method').value,wrap=document.getElementById('kmlr-simp-val-wrap'),lbl=document.getElementById('kmlr-simp-val-label');if(m==='none'){wrap.style.display='none';}else{wrap.style.display='';lbl.textContent=m==='distance'?'Minimum distance between points (metres)':'Minimum time between points (seconds)';document.getElementById('kmlr-simp-val').value=m==='distance'?50:10;} }
+
+function extractTimestamp(pm) { const t=pm.querySelector('TimeStamp when');if(t)return new Date(t.textContent.trim());const tb=pm.querySelector('TimeSpan begin');if(tb)return new Date(tb.textContent.trim());const d=pm.querySelector('description, name');if(d){const m=d.textContent.match(/\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}/);if(m)return new Date(m[0]);}return null; }
+
+function simplifyByDistance(points,minDist){if(!points.length)return points;const kept=[points[0]];for(let i=1;i<points.length;i++){const prev=kept[kept.length-1];if(haversine(prev.lat,prev.lng,points[i].lat,points[i].lng)>=minDist)kept.push(points[i]);}if(kept[kept.length-1]!==points[points.length-1])kept.push(points[points.length-1]);return kept;}
+function simplifyByTime(points,minSecs){if(!points.length)return points;const kept=[points[0]];for(let i=1;i<points.length;i++){const prev=kept[kept.length-1];if(!points[i].ts||!prev.ts){kept.push(points[i]);continue;}if((points[i].ts-prev.ts)/1000>=minSecs)kept.push(points[i]);}if(kept[kept.length-1]!==points[points.length-1])kept.push(points[points.length-1]);return kept;}
+
+function reduceKML() {
+  if(!kmlrDoc){setStatus('kmlr-status','No file loaded.','err');return;}
+  const mode=document.getElementById('kmlr-mode').value,order=document.getElementById('kmlr-order').value,simpMethod=document.getElementById('kmlr-simp-method').value,simpVal=parseFloat(document.getElementById('kmlr-simp-val').value)||0,name=document.getElementById('kmlr-name').value||'Search Track',colour=document.getElementById('kmlr-colour').value;
+  const workDoc=kmlrDoc.cloneNode(true),ns=workDoc.documentElement.namespaceURI||'http://www.opengis.net/kml/2.2';
+  const ptPlacemarks=[...workDoc.querySelectorAll('Placemark')].filter(pm=>pm.querySelector('Point'));
+  const pointData=[];
+  ptPlacemarks.forEach(pm=>{const coordEl=pm.querySelector('Point coordinates');if(!coordEl)return;const parts=coordEl.textContent.trim().split(','),lng=parseFloat(parts[0]),lat=parseFloat(parts[1]);if(isNaN(lat)||isNaN(lng))return;const ts=extractTimestamp(pm);pointData.push({lat,lng,ts,coordStr:coordEl.textContent.trim()});});
+  ptPlacemarks.forEach(pm=>pm.parentNode.removeChild(pm));
+  if(mode==='rebuild')[...workDoc.querySelectorAll('Placemark')].filter(pm=>pm.querySelector('LineString')).forEach(pm=>pm.parentNode.removeChild(pm));
+  let outPts=0;const removedMarkers=ptPlacemarks.length;
+  if(mode!=='strip'&&pointData.length>1){
+    if(order==='timestamp'){const withTs=pointData.filter(p=>p.ts&&!isNaN(p.ts)),withoutTs=pointData.filter(p=>!p.ts||isNaN(p.ts));withTs.sort((a,b)=>a.ts-b.ts);pointData.length=0;withTs.forEach(p=>pointData.push(p));withoutTs.forEach(p=>pointData.push(p));}
+    let finalPoints=pointData;
+    if(simpMethod==='distance'&&simpVal>0)finalPoints=simplifyByDistance(pointData,simpVal);
+    else if(simpMethod==='time'&&simpVal>0)finalPoints=simplifyByTime(pointData,simpVal);
+    outPts=finalPoints.length;
+    if(outPts>1){
+      const doc=workDoc.querySelector('Document')||workDoc.documentElement;
+      const style=workDoc.createElementNS(ns,'Style');style.setAttribute('id','reduced-track');
+      const lineStyle=workDoc.createElementNS(ns,'LineStyle'),colorEl=workDoc.createElementNS(ns,'color'),widthEl=workDoc.createElementNS(ns,'width');
+      colorEl.textContent=colour;widthEl.textContent='2';lineStyle.appendChild(colorEl);lineStyle.appendChild(widthEl);style.appendChild(lineStyle);doc.insertBefore(style,doc.firstChild);
+      const pm=workDoc.createElementNS(ns,'Placemark'),nameEl=workDoc.createElementNS(ns,'name'),styleUrl=workDoc.createElementNS(ns,'styleUrl'),ls=workDoc.createElementNS(ns,'LineString'),coordsEl=workDoc.createElementNS(ns,'coordinates');
+      nameEl.textContent=name;styleUrl.textContent='#reduced-track';
+      coordsEl.textContent='\n'+finalPoints.map(p=>p.coordStr).join('\n')+'\n';
+      ls.appendChild(coordsEl);pm.appendChild(nameEl);pm.appendChild(styleUrl);pm.appendChild(ls);doc.appendChild(pm);
+    }
+  }
+  const output=new XMLSerializer().serializeToString(workDoc),outSize=new Blob([output]).size,reduction=kmlrOrigSize>0?Math.round((1-outSize/kmlrOrigSize)*100):0;
+  document.getElementById('kmlr-out-pts').textContent=outPts.toLocaleString();
+  document.getElementById('kmlr-removed').textContent=removedMarkers.toLocaleString();
+  document.getElementById('kmlr-reduction').textContent=reduction+'%';
+  document.getElementById('kmlr-result').style.display='block';
+  setStatus('kmlr-status','Done. '+removedMarkers.toLocaleString()+' markers removed'+(outPts>0?', '+outPts.toLocaleString()+'-point track written':'')+'. Reduced by ~'+reduction+'%. Downloading...','ok');
+  downloadBlob(output,(name.replace(/\s+/g,'_'))+'_reduced.kml','application/vnd.google-earth.kml+xml');
+}
+
+function newEntryKMLR() { kmlrDoc=null;kmlrOrigSize=0;document.getElementById('kmlr-config').style.display='none';document.getElementById('kmlr-result').style.display='none';document.getElementById('kmlr-file').value='';document.getElementById('kmlr-simp-method').value='none';document.getElementById('kmlr-simp-val-wrap').style.display='none';clearStatus('kmlr-status'); }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TOOL 4: Search Patterns
+// ═══════════════════════════════════════════════════════════════════════════
+function toggleSPOptions() { const t=document.getElementById('sp-type').value;document.getElementById('sp-creeping-opts').style.display=t==='creeping'?'':'none';document.getElementById('sp-square-opts').style.display=t==='square'?'':'none'; }
+function newEntryPattern() { document.getElementById('sp-lat').value='';document.getElementById('sp-lng').value='';document.getElementById('sp-bearing').value='0';document.getElementById('sp-result').style.display='none';clearStatus('sp-status'); }
+
+function buildCreepingLine(lat,lng,bearing,trackLen,sweepWidth,numTracks,expandRight){
+  const perpBrg=normBearing(bearing+(expandRight?90:-90)),waypoints=[];
+  for(let i=0;i<numTracks;i++){
+    const trackBase=destPoint(lat,lng,perpBrg,i*sweepWidth),goFwd=(i%2===0);
+    const startPt=goFwd?trackBase:destPoint(trackBase.lat,trackBase.lng,bearing,trackLen);
+    const endPt=goFwd?destPoint(trackBase.lat,trackBase.lng,bearing,trackLen):trackBase;
+    waypoints.push({...startPt,label:'T'+(i+1)+(goFwd?'S':'E')});
+    waypoints.push({...endPt,label:'T'+(i+1)+(goFwd?'E':'S')});
+    if(i<numTracks-1){const transitionPt=destPoint(endPt.lat,endPt.lng,perpBrg,sweepWidth);waypoints.push({...transitionPt,label:'T'+(i+1)+'T'});}
+  }
+  return waypoints;
+}
+
+function buildExpandingSquare(lat,lng,bearing,sweepWidth,radius,turnRight){
+  const SQRT2=Math.sqrt(2);
+  const waypoints=[{lat,lng,label:'Datum'}];
+  let curLat=lat,curLng=lng,curBearing=normBearing(bearing);
+  const turnDir=turnRight?90:-90;
+  let pair=1,legInPair=0,legNum=0;
+  while(true){
+    const legLen=pair*sweepWidth;
+    const end=destPoint(curLat,curLng,curBearing,legLen);
+    const cornerDist=haversine(lat,lng,end.lat,end.lng);
+    const edgeDist=cornerDist/SQRT2;
+    legNum++;
+    waypoints.push({lat:end.lat,lng:end.lng,label:'W'+legNum});
+    curLat=end.lat;curLng=end.lng;
+    curBearing=normBearing(curBearing+turnDir);
+    legInPair++;
+    if(legInPair===2){legInPair=0;pair++;}
+    if(edgeDist>=radius)break;
+  }
+  return waypoints;
+}
+
+function buildPatternKML(name,colour,waypoints,includeDatum,includeWaypoints,patternType,datLat,datLng){
+  const NL='\n';
+  let kml='<?xml version="1.0" encoding="UTF-8"?>'+NL+'<kml xmlns="http://www.opengis.net/kml/2.2">'+NL+'<Document>'+NL;
+  kml+='  <name>'+name+'</name>'+NL;
+  kml+='  <Style id="track"><LineStyle><color>'+colour+'</color><width>2</width></LineStyle></Style>'+NL;
+  kml+='  <Style id="datum-style"><IconStyle><scale>1.2</scale><Icon><href>http://maps.google.com/mapfiles/kml/paddle/red-circle.png</href></Icon></IconStyle></Style>'+NL;
+  kml+='  <Style id="wpt-style"><IconStyle><scale>0.6</scale><Icon><href>http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href></Icon></IconStyle><LabelStyle><scale>0.7</scale></LabelStyle></Style>'+NL;
+  if(includeDatum)kml+='  <Placemark><name>Datum</name><styleUrl>#datum-style</styleUrl><Point><coordinates>'+datLng.toFixed(7)+','+datLat.toFixed(7)+',0</coordinates></Point></Placemark>'+NL;
+  const wptList=patternType==='square'?waypoints.slice(1):waypoints.filter(w=>!w.label.endsWith('T'));
+  if(includeWaypoints)wptList.forEach(wp=>{kml+='  <Placemark><name>'+wp.label+'</name><styleUrl>#wpt-style</styleUrl><Point><coordinates>'+wp.lng.toFixed(7)+','+wp.lat.toFixed(7)+',0</coordinates></Point></Placemark>'+NL;});
+  const linePts=patternType==='square'?waypoints.slice(1):waypoints;
+  const coordStr=linePts.map(wp=>wp.lng.toFixed(7)+','+wp.lat.toFixed(7)+',0').join(NL+'          ');
+  kml+='  <Placemark><name>'+name+' track</name><styleUrl>#track</styleUrl><LineString><coordinates>'+NL+'          '+coordStr+NL+'    </coordinates></LineString></Placemark>'+NL;
+  kml+='</Document>'+NL+'</kml>';
+  return kml;
+}
+
+function getPatternInputs(){const lat=parseFloat(document.getElementById('sp-lat').value),lng=parseFloat(document.getElementById('sp-lng').value),bearing=parseFloat(document.getElementById('sp-bearing').value)||0,type=document.getElementById('sp-type').value;if(isNaN(lat)||isNaN(lng))return null;if(Math.abs(lat)>90||Math.abs(lng)>180)return null;return{lat,lng,bearing,type};}
+
+function computePattern(inp){
+  if(inp.type==='creeping'){const length=parseFloat(document.getElementById('sp-cl-length').value),sweep=parseFloat(document.getElementById('sp-cl-sweep').value),tracks=parseInt(document.getElementById('sp-cl-tracks').value),expandRight=document.getElementById('sp-cl-side').value==='right';if(!length||!sweep||!tracks){setStatus('sp-status','Fill in all parameters.','err');return null;}const waypoints=buildCreepingLine(inp.lat,inp.lng,inp.bearing,length,sweep,tracks,expandRight);return{waypoints,totalArea:length*sweep*tracks,type:'creeping'};}
+  else{const radius=parseFloat(document.getElementById('sp-sq-radius').value),sweep=parseFloat(document.getElementById('sp-sq-sweep').value),turnRight=document.getElementById('sp-sq-turn').value==='right';if(!radius||!sweep){setStatus('sp-status','Fill in all parameters.','err');return null;}const waypoints=buildExpandingSquare(inp.lat,inp.lng,inp.bearing,sweep,radius,turnRight);return{waypoints,totalArea:Math.PI*radius*radius,type:'square',requestedRadius:radius};}
+}
+
+function showPatternStats(result){
+  let totalDist=0;const pts=result.waypoints;for(let i=1;i<pts.length;i++)totalDist+=haversine(pts[i-1].lat,pts[i-1].lng,pts[i].lat,pts[i].lng);
+  const trackPts=result.type==='square'?pts.slice(1):pts,legs=trackPts.length-1;
+  document.getElementById('sp-total-dist').textContent=formatDist(totalDist);
+  document.getElementById('sp-area').textContent=result.totalArea>=1000000?(result.totalArea/1000000).toFixed(2)+' km'+String.fromCharCode(178):Math.round(result.totalArea/10000)+' ha';
+  document.getElementById('sp-legs-out').textContent=legs;
+  document.getElementById('sp-waypts-out').textContent=trackPts.length;
+  document.getElementById('sp-result').style.display='block';
+  setStatus('sp-status','Pattern calculated &mdash; total track: '+formatDist(totalDist)+'.','info');
+}
+
+function previewPattern(){const inp=getPatternInputs();if(!inp){setStatus('sp-status','Enter a valid datum latitude and longitude first.','err');return;}const result=computePattern(inp);if(result)showPatternStats(result);}
+
+function generatePattern(){
+  const inp=getPatternInputs();if(!inp){setStatus('sp-status','Enter a valid datum latitude and longitude first.','err');return;}
+  const result=computePattern(inp);if(!result)return;
+  showPatternStats(result);
+  const name=document.getElementById('sp-name').value||'Search Pattern',colour=document.getElementById('sp-colour').value,includeDatum=document.getElementById('sp-datum-marker').checked,includeWaypoints=document.getElementById('sp-waypoints').checked;
+  const kml=buildPatternKML(name,colour,result.waypoints,includeDatum,includeWaypoints,result.type,inp.lat,inp.lng);
+  setStatus('sp-status','Generated. Downloading KML...','ok');
+  downloadBlob(kml,(name.replace(/\s+/g,'_'))+'.kml','application/vnd.google-earth.kml+xml');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TOOL 5: Search Boxes
+// ═══════════════════════════════════════════════════════════════════════════
+let sbMode = 'grid';
+
+function setSBMode(mode) {
+  sbMode = mode;
+  document.getElementById('sb-tab-grid').classList.toggle('active', mode === 'grid');
+  document.getElementById('sb-tab-radial').classList.toggle('active', mode === 'radial');
+  document.getElementById('sb-grid-opts').style.display = mode === 'grid' ? '' : 'none';
+  document.getElementById('sb-radial-opts').style.display = mode === 'radial' ? '' : 'none';
+  document.getElementById('sb-lat-label').textContent = mode === 'grid' ? 'Bottom-left latitude' : 'Centre datum latitude';
+}
+
+function seqToAlpha(n) {
+  let s = '';
+  while (n > 0) { n--; s = String.fromCharCode(65 + (n % 26)) + s; n = Math.floor(n / 26); }
+  return s;
+}
+
+function seqToDoubleAlpha(n) {
+  const i = n - 1;
+  return String.fromCharCode(65 + Math.floor(i / 26)) + String.fromCharCode(65 + (i % 26));
+}
+
+function makeBoxLabel(format, seq, group, pos) {
+  switch (format) {
+    case 'num':      return String(seq);
+    case 'dotted':   return group + '.' + pos;
+    case 'alpha':    return seqToAlpha(seq);
+    case 'dblalpha': return seqToDoubleAlpha(seq);
+    case 'alphanum': return seqToAlpha(group) + pos;
+    default:         return String(seq);
+  }
+}
+
+function buildBoxPolygon(blLat, blLng, bearing, size) {
+  const up = normBearing(bearing), right = normBearing(bearing + 90);
+  const bl = { lat: blLat, lng: blLng };
+  const br = destPoint(blLat, blLng, right, size);
+  const tr = destPoint(br.lat, br.lng, up, size);
+  const tl = destPoint(blLat, blLng, up, size);
+  return [bl, br, tr, tl, bl];
+}
+
+function buildSearchGrid(lat, lng, bearing, size, cols, rows, labelFormat) {
+  const up = normBearing(bearing), right = normBearing(bearing + 90);
+  const boxes = [];
+  let seq = 0;
+  for (let r = rows - 1; r >= 0; r--) {
+    for (let c = 0; c < cols; c++) {
+      seq++;
+      const rowNum = rows - r;
+      const colNum = c + 1;
+      const colShift = destPoint(lat, lng, right, c * size);
+      const bl = destPoint(colShift.lat, colShift.lng, up, r * size);
+      boxes.push({ label: makeBoxLabel(labelFormat, seq, rowNum, colNum), coords: buildBoxPolygon(bl.lat, bl.lng, bearing, size) });
+    }
+  }
+  return boxes;
+}
+
+function buildSearchRadial(lat, lng, bearing, size, rings, labelFormat) {
+  const up = normBearing(bearing), right = normBearing(bearing + 90);
+  const down = normBearing(bearing + 180), left = normBearing(bearing + 270);
+  const halfDown = destPoint(lat, lng, down, size / 2);
+  const centreBoxBL = destPoint(halfDown.lat, halfDown.lng, left, size / 2);
+
+  function getBoxBL(gc, gr) {
+    const cs = destPoint(centreBoxBL.lat, centreBoxBL.lng, right, gc * size);
+    return destPoint(cs.lat, cs.lng, up, gr * size);
+  }
+
+  const boxes = [];
+  let seq = 0;
+
+  seq++;
+  const cbl = getBoxBL(0, 0);
+  boxes.push({ label: makeBoxLabel(labelFormat, seq, 0, 1), coords: buildBoxPolygon(cbl.lat, cbl.lng, bearing, size) });
+
+  for (let ring = 1; ring <= rings; ring++) {
+    let ringPos = 0;
+    const addBox = (gc, gr) => { ringPos++; seq++; const bl = getBoxBL(gc, gr); boxes.push({ label: makeBoxLabel(labelFormat, seq, ring, ringPos), coords: buildBoxPolygon(bl.lat, bl.lng, bearing, size) }); };
+    for (let gc = -ring; gc <= ring; gc++) addBox(gc, ring);
+    for (let gr = ring - 1; gr >= -ring; gr--) addBox(ring, gr);
+    for (let gc = ring - 1; gc >= -ring; gc--) addBox(gc, -ring);
+    for (let gr = -ring + 1; gr <= ring - 1; gr++) addBox(-ring, gr);
+  }
+  return boxes;
+}
+
+function buildSearchBoxesKML(name, colour, boxes) {
+  const NL = '\n';
+  const fillColour = '40' + colour.slice(2);
+  let kml = '<?xml version="1.0" encoding="UTF-8"?>' + NL + '<kml xmlns="http://www.opengis.net/kml/2.2">' + NL + '<Document>' + NL;
+  kml += '  <name>' + name + '</name>' + NL;
+  kml += '  <Style id="box"><LineStyle><color>' + colour + '</color><width>1.5</width></LineStyle><PolyStyle><color>' + fillColour + '</color></PolyStyle><LabelStyle><scale>0.8</scale></LabelStyle></Style>' + NL;
+  boxes.forEach(box => {
+    const coordStr = box.coords.map(c => c.lng.toFixed(7) + ',' + c.lat.toFixed(7) + ',0').join(NL + '          ');
+    kml += '  <Placemark>' + NL;
+    kml += '    <name>' + box.label + '</name>' + NL;
+    kml += '    <styleUrl>#box</styleUrl>' + NL;
+    kml += '    <Polygon><outerBoundaryIs><LinearRing><coordinates>' + NL;
+    kml += '          ' + coordStr + NL;
+    kml += '    </coordinates></LinearRing></outerBoundaryIs></Polygon>' + NL;
+    kml += '  </Placemark>' + NL;
+  });
+  kml += '</Document>' + NL + '</kml>';
+  return kml;
+}
+
+function getSBInputs() {
+  const lat = parseFloat(document.getElementById('sb-lat').value);
+  const lng = parseFloat(document.getElementById('sb-lng').value);
+  const size = parseFloat(document.getElementById('sb-size').value) || 1000;
+  const bearing = parseFloat(document.getElementById('sb-bearing').value) || 0;
+  const labelFormat = document.getElementById('sb-label-format').value;
+  if (isNaN(lat) || isNaN(lng)) return null;
+  return { lat, lng, size, bearing, labelFormat };
+}
+
+function computeSearchBoxes(inp) {
+  if (sbMode === 'grid') {
+    const cols = parseInt(document.getElementById('sb-cols').value) || 5;
+    const rows = parseInt(document.getElementById('sb-rows').value) || 5;
+    const boxes = buildSearchGrid(inp.lat, inp.lng, inp.bearing, inp.size, cols, rows, inp.labelFormat);
+    return { boxes, totalArea: boxes.length * inp.size * inp.size };
+  } else {
+    const rings = parseInt(document.getElementById('sb-rings').value);
+    const boxes = buildSearchRadial(inp.lat, inp.lng, inp.bearing, inp.size, rings, inp.labelFormat);
+    return { boxes, totalArea: boxes.length * inp.size * inp.size };
+  }
+}
+
+function showSBStats(result, inp) {
+  document.getElementById('sb-total-boxes').textContent = result.boxes.length;
+  const area = result.totalArea;
+  document.getElementById('sb-total-area').textContent = area >= 1000000 ? (area / 1000000).toFixed(2) + ' km' + String.fromCharCode(178) : Math.round(area / 10000) + ' ha';
+  document.getElementById('sb-box-size-out').textContent = formatDist(inp.size) + ' x ' + formatDist(inp.size);
+  document.getElementById('sb-result').style.display = 'block';
+  setStatus('sb-status', result.boxes.length + ' boxes, total area ' + (area >= 1000000 ? (area / 1000000).toFixed(2) + ' km\u00B2' : Math.round(area / 10000) + ' ha') + '.', 'info');
+}
+
+function previewSearchBoxes() {
+  const inp = getSBInputs();
+  if (!inp) { setStatus('sb-status', 'Enter a valid latitude and longitude first.', 'err'); return; }
+  const result = computeSearchBoxes(inp);
+  showSBStats(result, inp);
+}
+
+function generateSearchBoxes() {
+  const inp = getSBInputs();
+  if (!inp) { setStatus('sb-status', 'Enter a valid latitude and longitude first.', 'err'); return; }
+  const result = computeSearchBoxes(inp);
+  showSBStats(result, inp);
+  const name = document.getElementById('sb-name').value || 'Search Boxes';
+  const colour = document.getElementById('sb-colour').value;
+  const kml = buildSearchBoxesKML(name, colour, result.boxes);
+  setStatus('sb-status', result.boxes.length + ' boxes generated. Downloading KML...', 'ok');
+  downloadBlob(kml, (name.replace(/\s+/g, '_')) + '.kml', 'application/vnd.google-earth.kml+xml');
+}
+
+function newEntrySearchBoxes() {
+  document.getElementById('sb-lat').value = '';
+  document.getElementById('sb-lng').value = '';
+  document.getElementById('sb-result').style.display = 'none';
+  clearStatus('sb-status');
+}
+</script>
+</body>
+</html>

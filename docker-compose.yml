@@ -1,0 +1,9 @@
+services:
+  sar-toolkit:
+    build: .
+    container_name: sar-toolkit
+    restart: unless-stopped
+    ports:
+      - "3080:80"     # Change 3080 to whatever port you prefer
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
