@@ -1,65 +1,29 @@
-# SAR Field Toolkit
+SAR Field Toolkit
 
-A self-hosted single-page application for Search & Rescue data processing.
-All file processing is client-side — no data ever leaves the browser.
+A self-hosted, browser-based toolset for Search and Rescue data processing. All computation runs client-side — no data is ever uploaded to any server.
 
-## Tools included
+Tools
+Tool	Description
+CSV to KML	Import lat/long or UTM coordinates from CSV and export as KML placemarks with optional track line
+GPX Cleaner	Remove erroneous straight-line segments caused by GPS signal loss from track files
+KML Reducer	Strip thousands of point markers from a KML (e.g. search jet logs) and replace with a single clean track line
+Search Patterns	Generate creeping line (parallel track) or expanding square search patterns as KML
+Search Boxes	Generate a grid or radial set of labelled search box polygons as KML for assigning sectors to teams
+Quick start
 
-- **CSV to KML** — import lat/long or UTM coordinates, export KML placemarks with optional polygon
-- **DJI to Polygon** — convert DJI drone flight logs to KML coverage polygon or track
-- **GPX Cleaner** — remove erroneous straight-line segments caused by GPS signal loss
+Requires Docker and Docker Compose — nothing else.
 
----
+bash
+curl -O https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/sar-toolkit/main/docker-compose.yml
+docker compose up -d
 
-## Deployment on dockhand (LXC 200)
+Access at http://localhost:3080.
 
-### 1. Copy files to dockhand
+To change the port, edit the ports: line in docker-compose.yml before running.
 
-```bash
-scp -r sar-toolkit/ root@192.168.1.244:/opt/sar-toolkit/
-```
+Updating
+bash
+docker compose pull
+docker compose up -d
 
-### 2. Build and start
-
-```bash
-cd /opt/sar-toolkit
-docker compose up -d --build
-```
-
-App will be available at: http://192.168.1.244:3080
-
-### 3. Expose via Cloudflare Zero Trust (optional)
-
-Add a tunnel entry in your Cloudflare Zero Trust dashboard:
-- Subdomain: `sar` (→ sar.chabyhome.net)
-- Service: `http://localhost:3080`
-
----
-
-## Adding new tools
-
-Each tool is a self-contained section in `index.html`:
-
-1. Add a nav item in the sidebar
-2. Add a `<div class="panel" id="panel-TOOLNAME">` section
-3. Add the JS logic at the bottom of the script block
-4. Rebuild: `docker compose up -d --build`
-
----
-
-## Port
-
-Default port is **3080**. Change in `docker-compose.yml`:
-
-```yaml
-ports:
-  - "3080:80"   # host:container
-```
-
-## Update workflow
-
-```bash
-cd /opt/sar-toolkit
-# edit index.html
-docker compose up -d --build
-```
+The image is rebuilt and published automatically on every push to main via GitHub Actions.
