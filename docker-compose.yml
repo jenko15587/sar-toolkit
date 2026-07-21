@@ -1,9 +1,7 @@
 services:
   sar-toolkit:
-    build: .
+    image: ghcr.io/jenko15587/sar-toolkit:latest
     container_name: sar-toolkit
     restart: unless-stopped
     ports:
-      - "3080:80"     # Change 3080 to whatever port you prefer
-    labels:
-      - "com.centurylinklabs.watchtower.enable=false"
+      - "3080:80"
