@@ -14,7 +14,7 @@ Quick start
 Requires Docker and Docker Compose — nothing else.
 
 bash
-curl -O https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/sar-toolkit/main/docker-compose.yml
+curl -O https://raw.githubusercontent.com/jenko15587/sar-toolkit/main/docker-compose.yml
 docker compose up -d
 
 Access at http://localhost:3080.
