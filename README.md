@@ -11,21 +11,17 @@ Tools
 - Search Boxes	Generate a grid or radial set of labelled search box polygons as KML for assigning sectors to teams
 
 
-Quick start
+## Quick start
 
-Requires Docker and Docker Compose — nothing else.
+This is a static, client-side app — no server, no build step, no dependencies.
 
-bash
-curl -O https://raw.githubusercontent.com/jenko15587/sar-toolkit/main/docker-compose.yml
-docker compose up -d
+**Live version:** hosted at [sar.chabyhome.net](https://sar.chabyhome.net) via Cloudflare Pages, redeployed automatically on every push to `main`.
 
-Access at http://localhost:3080.
+**Run it yourself:**
+- Just open `index.html` in a browser, or
+- Serve the folder with any static file server (`python -m http.server`, `npx serve`, etc.)
+- Or fork/clone and connect your own Cloudflare Pages / GitHub Pages project — no build command needed, output directory is the repo root.
 
-To change the port, edit the ports: line in docker-compose.yml before running.
+### Updating
 
-Updating
-bash
-docker compose pull
-docker compose up -d
-
-The image is rebuilt and published automatically on every push to main via GitHub Actions.
+Push to `main` (or merge a PR) and the live site redeploys automatically. No image to rebuild, nothing to pull.
