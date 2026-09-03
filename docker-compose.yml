@@ -1,7 +1,0 @@
-services:
-  sar-toolkit:
-    image: ghcr.io/jenko15587/sar-toolkit:latest
-    container_name: sar-toolkit
-    restart: unless-stopped
-    ports:
-      - "3080:80"
